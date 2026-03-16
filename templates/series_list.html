@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}My Series — Simple Series Watcher{% endblock %}
+
+{% block content %}
+<div class="series-search-bar">
+    <input type="text" id="seriesSearchInput" placeholder="Search for a series to add…"
+           autocomplete="off" spellcheck="false">
+    <div class="search-results" id="searchResults"></div>
+</div>
+
+<div id="seriesListContainer">
+    <div class="loader" id="seriesLoader">Loading…</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/series.js') }}"></script>
+{% endblock %}

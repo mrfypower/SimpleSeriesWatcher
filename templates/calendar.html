@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Calendar — Simple Series Watcher{% endblock %}
+
+{% block content %}
+<div class="calendar-header">
+    <button class="btn btn-sm" id="prevMonth">&larr; Prev</button>
+    <h2 id="calendarTitle"></h2>
+    <button class="btn btn-sm" id="nextMonth">Next &rarr;</button>
+    <button class="btn btn-sm btn-outline" id="todayBtn">Today</button>
+</div>
+
+<div class="calendar-legend">
+    <span class="legend-item"><span class="legend-dot premiere"></span> Season Premiere</span>
+    <span class="legend-item"><span class="legend-dot season-finale"></span> Season Finale</span>
+    <span class="legend-item"><span class="legend-dot series-finale"></span> Series Finale</span>
+    <span class="legend-item"><span class="legend-dot watched"></span> Watched</span>
+</div>
+
+<div class="calendar-grid" id="calendarGrid"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+<script>
+    initCalendar({{ year }}, {{ month }});
+</script>
+{% endblock %}

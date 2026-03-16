@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ series.name }} — Simple Series Watcher{% endblock %}
+
+{% block content %}
+<div id="seriesDetailContainer" data-series-id="{{ series.id }}">
+    <div class="loader" id="detailLoader">Loading…</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/series_detail.js') }}"></script>
+{% endblock %}

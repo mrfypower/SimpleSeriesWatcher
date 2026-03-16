@@ -1,0 +1,15 @@
+services:
+  ssw:
+    build: .
+    container_name: simple-series-watcher
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - DATABASE_PATH=/app/data/ssw.db
+    volumes:
+      - ssw-data:/app/data
+
+volumes:
+  ssw-data:

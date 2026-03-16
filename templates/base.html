@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Simple Series Watcher{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">Simple Series Watcher</a>
+            <span class="tmdb-status-label">TMDB Connection Check: <span class="tmdb-status" id="tmdbStatus" title="Checking TMDB connection…"></span></span>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Calendar</a>
+                <a href="/series" class="nav-link {% if request.path.startswith('/series') %}active{% endif %}">My Series</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link nav-dropdown-btn" id="dataMenuBtn">Data</button>
+                    <div class="nav-dropdown-content" id="dataMenu">
+                        <a href="/api/export" id="exportBtn">Export JSON</a>
+                        <a href="#" id="importBtn">Import JSON</a>
+                    </div>
+                </div>
+            </div>
+            <button class="nav-hamburger" id="hamburgerBtn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <div class="nav-mobile" id="mobileMenu">
+            <a href="/" class="nav-link">Calendar</a>
+            <a href="/series" class="nav-link">My Series</a>
+            <a href="/api/export" class="nav-link">Export JSON</a>
+            <a href="#" class="nav-link" id="importBtnMobile">Import JSON</a>
+        </div>
+    </nav>
+
+    <input type="file" id="importFileInput" accept=".json" style="display:none">
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Navbar mobile toggle
+        document.getElementById('hamburgerBtn').addEventListener('click', () => {
+            document.getElementById('mobileMenu').classList.toggle('open');
+        });
+
+        // Dropdown toggle
+        document.getElementById('dataMenuBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('dataMenu').classList.toggle('open');
+        });
+        document.addEventListener('click', () => {
+            document.getElementById('dataMenu').classList.remove('open');
+        });
+
+        // Import handler
+        function triggerImport() {
+            document.getElementById('importFileInput').click();
+        }
+        document.getElementById('importBtn').addEventListener('click', (e) => {
+            e.preventDefault(); triggerImport();
+        });
+        document.getElementById('importBtnMobile').addEventListener('click', (e) => {
+            e.preventDefault(); triggerImport();
+        });
+        document.getElementById('importFileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const form = new FormData();
+            form.append('file', file);
+            showToast('Importing data…', 'info');
+            try {
+                const resp = await fetch('/api/import', {method: 'POST', body: form});
+                const data = await resp.json();
+                if (resp.ok) {
+                    showToast('Import complete!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.error || 'Import failed', 'error');
+                }
+            } catch (err) {
+                showToast('Import failed: ' + err.message, 'error');
+            }
+            e.target.value = '';
+        });
+
+        // TMDB connection check
+        (async function checkTmdb() {
+            const dot = document.getElementById('tmdbStatus');
+            try {
+                const resp = await fetch('/api/health');
+                const data = await resp.json();
+                if (data.tmdb) {
+                    dot.classList.add('ok');
+                    dot.title = 'TMDB connection OK';
+                } else {
+                    dot.classList.add('fail');
+                    dot.title = 'TMDB connection failed — check your API key';
+                }
+            } catch {
+                dot.classList.add('fail');
+                dot.title = 'Cannot reach server';
+            }
+        })();
+
+        // Toast notifications
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.textContent = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.classList.add('fade-out'); }, 2500);
+            setTimeout(() => { t.remove(); }, 3000);
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
