@@ -11,9 +11,13 @@ class TMDBClient:
 
     def _get(self, path, params=None):
         params = params or {}
-        params['api_key'] = self.api_key
+        headers = {}
+        if self.api_key.startswith('eyJ'):
+            headers['Authorization'] = f'Bearer {self.api_key}'
+        else:
+            params['api_key'] = self.api_key
         resp = self.session.get(f'{self.base_url}{path}', params=params,
-                                timeout=10)
+                                headers=headers, timeout=10)
         resp.raise_for_status()
         return resp.json()
 
