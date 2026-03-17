@@ -1,0 +1,11 @@
+# TMDB API Key — get one free at https://www.themoviedb.org/settings/api
+TMDB_API_KEY=your_tmdb_api_key_here
+
+# Path to SQLite database file (default: ./data/ssw.db)
+# DATABASE_PATH=./data/ssw.db
+
+# Flask secret key (change in production)
+# SECRET_KEY=change-me-in-production
+
+# Port to run the application on (default: 5000)
+# PORT=5000
