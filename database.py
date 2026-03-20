@@ -388,6 +388,8 @@ class Database:
                    JOIN series s ON e.series_id = s.id
                    WHERE e.watched = 0
                    AND s.status = 'watching'
+                   AND e.air_date IS NOT NULL
+                   AND e.air_date <= date('now')
                    ORDER BY s.name, e.season_number, e.episode_number'''
             ).fetchall()
             return [dict(r) for r in rows]
