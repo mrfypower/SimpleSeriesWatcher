@@ -1,8 +1,11 @@
 import csv
 import io
 import json
-from datetime import date
+import logging
+import time
+from datetime import date, datetime, timedelta
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from flask import (Flask, render_template, request, jsonify, Response)
 import requests
 
@@ -436,6 +439,80 @@ def api_import_csv():
     fail_count = len(results) - ok_count
     return jsonify({'results': results, 'imported': ok_count, 'failed': fail_count})
 
+
+# ─────────────────────────────────────────────
+# Background sync
+# ─────────────────────────────────────────────
+
+logger = logging.getLogger(__name__)
+
+
+def _sync_all_series():
+    """Daily background refresh of all watched series from TMDB."""
+    logger.info("Background sync: starting")
+    watching = [s for s in db.get_all_series() if s['status'] == 'watching']
+    refreshed = skipped = errors = 0
+    for s in watching:
+        ended = s.get('series_status') in ('Ended', 'Canceled')
+        threshold = timedelta(days=7) if ended else timedelta(hours=20)
+        last_updated = s.get('last_updated')
+        if last_updated:
+            try:
+                if datetime.now() - datetime.fromisoformat(last_updated) < threshold:
+                    skipped += 1
+                    continue
+            except ValueError:
+                pass
+        try:
+            details, all_episodes = tmdb.fetch_all_episodes(s['tmdb_id'])
+            db.update_series_meta(
+                s['id'],
+                name=details['name'],
+                poster_path=details['poster_path'],
+                overview=details['overview'],
+                series_status=details['series_status'],
+                num_seasons=details['number_of_seasons'],
+                num_episodes=details['number_of_episodes'],
+            )
+            db.upsert_episodes(s['id'], all_episodes)
+            refreshed += 1
+            logger.info("Background sync: refreshed '%s'", s['name'])
+        except Exception as e:
+            errors += 1
+            logger.error("Background sync: failed for '%s': %s", s['name'], e)
+        time.sleep(2)
+    logger.info(
+        "Background sync: done — %d refreshed, %d skipped, %d errors",
+        refreshed, skipped, errors,
+    )
+
+
+def _start_scheduler():
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(
+        _sync_all_series,
+        trigger='cron',
+        hour=config.SYNC_HOUR,
+        minute=0,
+        id='nightly_sync',
+        coalesce=True,
+        max_instances=1,
+    )
+    # Also run once shortly after startup (e.g. after NAS/Docker boot)
+    scheduler.add_job(
+        _sync_all_series,
+        trigger='date',
+        run_date=datetime.now() + timedelta(seconds=60),
+        id='startup_sync',
+    )
+    scheduler.start()
+    logger.info(
+        "Background scheduler started — startup sync in 60s, daily sync at %02d:00",
+        config.SYNC_HOUR,
+    )
+
+
+_start_scheduler()
 
 # ─────────────────────────────────────────────
 

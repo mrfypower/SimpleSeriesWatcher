@@ -9,3 +9,6 @@ TMDB_API_KEY=your_tmdb_api_key_here
 
 # Port to run the application on (default: 5000)
 # PORT=5000
+
+# Hour of day (0-23) for the automatic TMDB background sync (default: 3 = 3 AM)
+# SYNC_HOUR=3
