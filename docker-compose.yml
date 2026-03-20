@@ -4,10 +4,11 @@ services:
     container_name: simple-series-watcher
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${PORT:-5000}:${PORT:-5000}"
     environment:
       - TMDB_API_KEY=${TMDB_API_KEY}
       - DATABASE_PATH=/app/data/ssw.db
+      - PORT=${PORT:-5000}
     volumes:
       - ssw-data:/app/data
 
