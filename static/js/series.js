@@ -119,7 +119,7 @@
     function buildGroup(title, items, isArchived) {
         const group = document.createElement('div');
         group.className = 'series-group';
-        group.innerHTML = `<div class="series-group-title">${title}</div>`;
+        group.innerHTML = `<div class="series-group-title">${title} (${items.length})</div>`;
 
         items.forEach(s => {
             const card = document.createElement('a');
