@@ -101,7 +101,9 @@
     }
 
     function renderSeriesList(series) {
-        const airing = series.filter(s => s.status === 'watching' && s.series_status === 'Returning Series');
+        const returning = series.filter(s => s.status === 'watching' && s.series_status === 'Returning Series');
+        const airingActive = returning.filter(s => s.next_air_date);
+        const airingOnHold = returning.filter(s => !s.next_air_date);
         const ended = series.filter(s => s.status === 'watching' && s.series_status !== 'Returning Series');
         const archived = series.filter(s => s.status === 'archived');
 
@@ -111,7 +113,8 @@
         }
 
         container.innerHTML = '';
-        if (airing.length) container.appendChild(buildGroup('Currently Airing', airing, false));
+        if (airingActive.length) container.appendChild(buildGroup('Currently Airing — Active', airingActive, false));
+        if (airingOnHold.length) container.appendChild(buildGroup('Currently Airing — On Hold', airingOnHold, false));
         if (ended.length) container.appendChild(buildGroup('Ended / Canceled', ended, false));
         if (archived.length) container.appendChild(buildGroup('Archived', archived, true));
     }
@@ -136,6 +139,7 @@
                     <div class="series-card-meta">
                         ${s.number_of_seasons} season${s.number_of_seasons !== 1 ? 's' : ''} &middot;
                         ${s.series_status || 'Unknown'}
+                        ${s.next_air_date ? ' &middot; Next: ' + fmtDate(s.next_air_date) : ''}
                     </div>
                 </div>
                 <div class="series-card-actions">
@@ -207,5 +211,13 @@
         const div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
+    }
+
+    function fmtDate(iso) {
+        // iso is "YYYY-MM-DD"; parse as local date to avoid UTC-offset shifts
+        const [y, m, d] = iso.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
     }
 })();

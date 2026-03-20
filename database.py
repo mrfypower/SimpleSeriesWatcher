@@ -120,7 +120,14 @@ class Database:
         conn = self.get_connection()
         try:
             rows = conn.execute(
-                'SELECT * FROM series ORDER BY name'
+                '''SELECT s.*,
+                          (SELECT MIN(e.air_date)
+                           FROM episodes e
+                           WHERE e.series_id = s.id
+                           AND e.air_date >= date('now')
+                           AND e.watched = 0) as next_air_date
+                   FROM series s
+                   ORDER BY s.name'''
             ).fetchall()
             return [dict(r) for r in rows]
         finally:
