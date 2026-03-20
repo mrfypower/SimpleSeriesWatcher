@@ -137,17 +137,19 @@
                 <div class="series-card-actions">
                     ${isArchived
                         ? `<button class="btn btn-sm btn-success unarchive-btn" data-id="${s.id}" title="Unarchive">Unarchive</button>`
-                        : `<button class="btn btn-sm btn-outline archive-btn" data-id="${s.id}" title="Archive">Archive</button>`
+                        : `<button class="btn btn-sm btn-primary mark-watched-btn" data-id="${s.id}" title="Mark all episodes as watched">Mark Watched</button>
+                           <button class="btn btn-sm btn-outline archive-btn" data-id="${s.id}" title="Archive">Archive</button>`
                     }
                 </div>
             `;
             group.appendChild(card);
         });
 
-        // Event delegation for archive/unarchive buttons
+        // Event delegation for card action buttons
         group.addEventListener('click', async (e) => {
             const archiveBtn = e.target.closest('.archive-btn');
             const unarchiveBtn = e.target.closest('.unarchive-btn');
+            const markWatchedBtn = e.target.closest('.mark-watched-btn');
             if (archiveBtn) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -158,9 +160,23 @@
                 e.stopPropagation();
                 await unarchiveSeries(unarchiveBtn.dataset.id);
             }
+            if (markWatchedBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                await markSeriesWatched(markWatchedBtn.dataset.id);
+            }
         });
 
         return group;
+    }
+
+    async function markSeriesWatched(id) {
+        try {
+            await fetch(`/api/series/${id}/mark-watched`, {method: 'PUT'});
+            showToast('All episodes marked as watched', 'success');
+        } catch (err) {
+            showToast('Failed to mark as watched', 'error');
+        }
     }
 
     async function archiveSeries(id) {

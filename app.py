@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 from datetime import date
 
@@ -119,9 +121,9 @@ def api_series_detail(series_id):
                 is_last_season = sn == s['number_of_seasons']
                 ended = s['series_status'] in ('Ended', 'Canceled')
                 if is_last_season and ended:
-                    ep_type = 'series_finale'
+                    ep_type = 'series-finale'
                 else:
-                    ep_type = 'season_finale'
+                    ep_type = 'season-finale'
             ep['type'] = ep_type
             enriched.append(ep)
         fully_watched = all(e['watched'] for e in eps) if eps else False
@@ -178,6 +180,14 @@ def api_add_series():
     db.upsert_episodes(series_id, all_episodes)
 
     return jsonify({'id': series_id, 'name': details['name']}), 201
+
+
+@app.route('/api/series/<int:series_id>/mark-watched', methods=['PUT'])
+def api_mark_series_watched(series_id):
+    if not db.get_series(series_id):
+        return jsonify({'error': 'Not found'}), 404
+    db.mark_series_watched(series_id)
+    return jsonify({'ok': True})
 
 
 @app.route('/api/series/<int:series_id>/archive', methods=['PUT'])
@@ -300,6 +310,85 @@ def api_import():
                         'status': 'ok'})
 
     return jsonify({'results': results})
+
+
+@app.route('/api/import/csv', methods=['POST'])
+def api_import_csv():
+    """Import series and watched status from an episodecalendar.com CSV export."""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    f = request.files['file']
+    try:
+        raw = f.read().decode('utf-8-sig')
+    except UnicodeDecodeError:
+        return jsonify({'error': 'Invalid file encoding'}), 400
+
+    reader = csv.DictReader(io.StringIO(raw))
+    required = {'show', 'season', 'number', 'watched'}
+    if not required.issubset(set(reader.fieldnames or [])):
+        return jsonify({'error': 'Invalid CSV format. Expected columns: show, season, number, watched'}), 400
+
+    # Group episodes by show name
+    shows = {}
+    for row in reader:
+        name = row['show'].strip()
+        if not name:
+            continue
+        shows.setdefault(name, []).append({
+            'season': int(row['season']),
+            'episode': int(row['number']),
+            'watched': row['watched'].strip().lower() == 'true',
+        })
+
+    results = []
+    for show_name, episodes in shows.items():
+        # Search TMDB for the show
+        try:
+            search_results = tmdb.search_series(show_name)
+        except requests.RequestException:
+            results.append({'name': show_name, 'status': 'tmdb_search_error'})
+            continue
+
+        if not search_results:
+            results.append({'name': show_name, 'status': 'not_found'})
+            continue
+
+        tmdb_id = search_results[0]['tmdb_id']
+
+        try:
+            details, all_episodes = tmdb.fetch_all_episodes(tmdb_id)
+        except requests.RequestException:
+            results.append({'name': show_name, 'status': 'tmdb_error'})
+            continue
+
+        series_id = db.add_series(
+            tmdb_id=details['tmdb_id'],
+            name=details['name'],
+            poster_path=details['poster_path'],
+            overview=details['overview'],
+            series_status=details['series_status'],
+            num_seasons=details['number_of_seasons'],
+            num_episodes=details['number_of_episodes'],
+        )
+        db.upsert_episodes(series_id, all_episodes)
+
+        # Mark watched episodes
+        watched = [ep for ep in episodes if ep['watched']]
+        if watched:
+            db.import_watched(series_id, watched)
+
+        results.append({
+            'name': details['name'],
+            'tmdb_id': tmdb_id,
+            'status': 'ok',
+            'episodes_imported': len(episodes),
+            'episodes_watched': len(watched),
+        })
+
+    ok_count = sum(1 for r in results if r['status'] == 'ok')
+    fail_count = len(results) - ok_count
+    return jsonify({'results': results, 'imported': ok_count, 'failed': fail_count})
 
 
 # ─────────────────────────────────────────────

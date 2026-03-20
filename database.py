@@ -205,6 +205,17 @@ class Database:
         finally:
             conn.close()
 
+    def mark_series_watched(self, series_id):
+        conn = self.get_connection()
+        try:
+            conn.execute(
+                'UPDATE episodes SET watched=1 WHERE series_id=?',
+                (series_id,)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def is_season_fully_watched(self, series_id, season_number):
         conn = self.get_connection()
         try:

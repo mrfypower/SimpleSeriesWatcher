@@ -19,6 +19,7 @@
                     <div class="nav-dropdown-content" id="dataMenu">
                         <a href="/api/export" id="exportBtn">Export JSON</a>
                         <a href="#" id="importBtn">Import JSON</a>
+                        <a href="#" id="importCsvBtn">Import CSV (EpisodeCalendar)</a>
                     </div>
                 </div>
             </div>
@@ -31,10 +32,12 @@
             <a href="/series" class="nav-link">My Series</a>
             <a href="/api/export" class="nav-link">Export JSON</a>
             <a href="#" class="nav-link" id="importBtnMobile">Import JSON</a>
+            <a href="#" class="nav-link" id="importCsvBtnMobile">Import CSV (EpisodeCalendar)</a>
         </div>
     </nav>
 
     <input type="file" id="importFileInput" accept=".json" style="display:none">
+    <input type="file" id="importCsvFileInput" accept=".csv" style="display:none">
 
     <main class="container">
         {% block content %}{% endblock %}
@@ -66,6 +69,37 @@
         });
         document.getElementById('importBtnMobile').addEventListener('click', (e) => {
             e.preventDefault(); triggerImport();
+        });
+
+        // CSV Import handler
+        function triggerCsvImport() {
+            document.getElementById('importCsvFileInput').click();
+        }
+        document.getElementById('importCsvBtn').addEventListener('click', (e) => {
+            e.preventDefault(); triggerCsvImport();
+        });
+        document.getElementById('importCsvBtnMobile').addEventListener('click', (e) => {
+            e.preventDefault(); triggerCsvImport();
+        });
+        document.getElementById('importCsvFileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const form = new FormData();
+            form.append('file', file);
+            showToast('Importing CSV data… This may take a while.', 'info');
+            try {
+                const resp = await fetch('/api/import/csv', {method: 'POST', body: form});
+                const data = await resp.json();
+                if (resp.ok) {
+                    showToast(`Import complete! ${data.imported} series imported, ${data.failed} failed.`, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast(data.error || 'CSV import failed', 'error');
+                }
+            } catch (err) {
+                showToast('CSV import failed: ' + err.message, 'error');
+            }
+            e.target.value = '';
         });
         document.getElementById('importFileInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];

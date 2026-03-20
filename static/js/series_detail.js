@@ -65,6 +65,13 @@
         const unarchBtn = document.getElementById('unarchiveBtn');
         if (unarchBtn) unarchBtn.addEventListener('click', () => setArchive(false));
 
+        // ── Mark entire series watched ──
+        const markAllBar = document.createElement('div');
+        markAllBar.className = 'mark-all-bar';
+        markAllBar.innerHTML = `<button class="btn btn-sm btn-primary" id="markSeriesWatchedBtn">Mark Entire Series as Watched</button>`;
+        container.appendChild(markAllBar);
+        document.getElementById('markSeriesWatchedBtn').addEventListener('click', markSeriesWatched);
+
         // ── Seasons ──
         const seasonNums = Object.keys(s.seasons).map(Number).sort((a, b) => a - b);
         seasonNums.forEach(sn => {
@@ -127,6 +134,16 @@
                 }
             });
         });
+    }
+
+    async function markSeriesWatched() {
+        try {
+            await fetch(`/api/series/${seriesId}/mark-watched`, {method: 'PUT'});
+            showToast('All episodes marked as watched', 'success');
+            loadDetail();
+        } catch (err) {
+            showToast('Failed to mark as watched', 'error');
+        }
     }
 
     async function refreshSeries() {
