@@ -768,6 +768,21 @@ a:hover { text-decoration: underline; }
     font-weight: 700;
     color: var(--text-muted);
 }
+.poster-tab-badge {
+    position: absolute;
+    top: .3rem;
+    left: .3rem;
+    background: var(--primary);
+    color: #fff;
+    font-size: .6rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: .2rem .35rem;
+    border-radius: 3px;
+    min-width: 1.3em;
+    text-align: center;
+    pointer-events: none;
+}
 .poster-tab-name {
     position: absolute;
     bottom: 0;

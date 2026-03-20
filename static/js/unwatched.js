@@ -67,6 +67,12 @@
                 tab.appendChild(ph);
             }
 
+            const totalEps = Object.values(s.seasons).reduce((sum, arr) => sum + arr.length, 0);
+            const badge = document.createElement('span');
+            badge.className = 'poster-tab-badge';
+            badge.textContent = totalEps;
+            tab.appendChild(badge);
+
             const label = document.createElement('span');
             label.className = 'poster-tab-name';
             label.textContent = s.name;
