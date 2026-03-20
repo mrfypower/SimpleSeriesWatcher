@@ -207,6 +207,14 @@ def api_unarchive(series_id):
     return jsonify({'ok': True})
 
 
+@app.route('/api/series/<int:series_id>', methods=['DELETE'])
+def api_delete_series(series_id):
+    if not db.get_series(series_id):
+        return jsonify({'error': 'Not found'}), 404
+    db.delete_series(series_id)
+    return jsonify({'ok': True})
+
+
 @app.route('/api/series/<int:series_id>/refresh', methods=['PUT'])
 def api_refresh(series_id):
     s = db.get_series(series_id)

@@ -148,6 +148,7 @@
                         : `<button class="btn btn-sm btn-primary mark-watched-btn" data-id="${s.id}" title="Mark all episodes as watched">Mark Watched</button>
                            <button class="btn btn-sm btn-outline archive-btn" data-id="${s.id}" title="Archive">Archive</button>`
                     }
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${s.id}" data-name="${escHtml(s.name)}" title="Delete series">Delete</button>
                 </div>
             `;
             body.appendChild(card);
@@ -158,6 +159,7 @@
             const archiveBtn = e.target.closest('.archive-btn');
             const unarchiveBtn = e.target.closest('.unarchive-btn');
             const markWatchedBtn = e.target.closest('.mark-watched-btn');
+            const deleteBtn = e.target.closest('.delete-btn');
             if (archiveBtn) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -172,6 +174,11 @@
                 e.preventDefault();
                 e.stopPropagation();
                 await markSeriesWatched(markWatchedBtn.dataset.id);
+            }
+            if (deleteBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                await deleteSeries(deleteBtn.dataset.id, deleteBtn.dataset.name);
             }
         });
 
@@ -204,6 +211,21 @@
             loadSeriesList();
         } catch (err) {
             showToast('Failed to restore', 'error');
+        }
+    }
+
+    async function deleteSeries(id, name) {
+        if (!confirm(`Permanently delete "${name}" and all its episodes? This cannot be undone.`)) return;
+        try {
+            const resp = await fetch(`/api/series/${id}`, {method: 'DELETE'});
+            if (resp.ok) {
+                showToast(`"${name}" deleted`, 'success');
+                loadSeriesList();
+            } else {
+                showToast('Failed to delete series', 'error');
+            }
+        } catch (err) {
+            showToast('Failed to delete series', 'error');
         }
     }
 

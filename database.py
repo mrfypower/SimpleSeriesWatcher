@@ -365,6 +365,16 @@ class Database:
         finally:
             conn.close()
 
+    def delete_series(self, series_id):
+        """Permanently delete a series and all its episodes."""
+        conn = self.get_connection()
+        try:
+            conn.execute('DELETE FROM episodes WHERE series_id=?', (series_id,))
+            conn.execute('DELETE FROM series WHERE id=?', (series_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
     def get_unwatched_episodes(self):
         """Return all unwatched episodes for 'watching' series, ordered by series name,
         season, and episode number."""
