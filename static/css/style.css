@@ -612,10 +612,21 @@ a:hover { text-decoration: underline; }
 
 .ep-date { font-size: .75rem; color: var(--text-muted); white-space: nowrap; }
 
+.ep-overview {
+    flex: 2;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
 @media (max-width: 640px) {
     .episode-row { font-size: .8rem; padding: .4rem .5rem; }
     .ep-number { min-width: 42px; font-size: .75rem; }
     .ep-date { display: none; }
+    .ep-overview { display: none; }
 }
 
 /* ── Loader ── */

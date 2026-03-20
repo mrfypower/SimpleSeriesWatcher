@@ -277,6 +277,7 @@ def api_unwatched():
             'episode_number': ep['episode_number'],
             'name': ep['name'],
             'air_date': ep['air_date'],
+            'overview': ep.get('overview') or '',
         })
 
     return jsonify([series_map[sid] for sid in series_order])

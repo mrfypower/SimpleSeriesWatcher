@@ -66,6 +66,7 @@ class TMDBClient:
                 'episode_number': ep['episode_number'],
                 'name': ep.get('name', ''),
                 'air_date': ep.get('air_date', None),
+                'overview': ep.get('overview', ''),
             })
         return episodes
 

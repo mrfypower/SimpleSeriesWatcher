@@ -129,6 +129,7 @@
                     <input type="checkbox" class="ep-check" data-id="${ep.id}" ${ep.watched ? 'checked' : ''}>
                     <span class="ep-number">S${pad(ep.season_number)}E${pad(ep.episode_number)}</span>
                     <span class="ep-name" title="${escHtml(ep.name || '')}">${escHtml(ep.name || 'TBA')}</span>
+                    ${ep.overview ? `<span class="ep-overview" title="${escHtml(ep.overview)}">${escHtml(ep.overview)}</span>` : ''}
                     <span class="ep-date">${ep.air_date || '—'}</span>
                 `;
                 epList.appendChild(row);

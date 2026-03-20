@@ -38,6 +38,7 @@ class Database:
                 episode_number INTEGER NOT NULL,
                 name TEXT,
                 air_date TEXT,
+                overview TEXT,
                 watched INTEGER DEFAULT 0,
                 FOREIGN KEY (series_id) REFERENCES series(id) ON DELETE CASCADE,
                 UNIQUE(series_id, season_number, episode_number)
@@ -48,6 +49,11 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_series_status ON series(status);
         ''')
         conn.commit()
+        # Migration: add overview column to episodes if it doesn't exist
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(episodes)").fetchall()]
+        if 'overview' not in cols:
+            conn.execute('ALTER TABLE episodes ADD COLUMN overview TEXT')
+            conn.commit()
         conn.close()
 
     # ── Series operations ──
@@ -162,12 +168,13 @@ class Database:
             for ep in episodes:
                 conn.execute(
                     '''INSERT INTO episodes
-                       (series_id, season_number, episode_number, name, air_date)
-                       VALUES (?,?,?,?,?)
+                       (series_id, season_number, episode_number, name, air_date, overview)
+                       VALUES (?,?,?,?,?,?)
                        ON CONFLICT(series_id, season_number, episode_number)
-                       DO UPDATE SET name=excluded.name, air_date=excluded.air_date''',
+                       DO UPDATE SET name=excluded.name, air_date=excluded.air_date,
+                                    overview=excluded.overview''',
                     (series_id, ep['season_number'], ep['episode_number'],
-                     ep['name'], ep['air_date'])
+                     ep['name'], ep['air_date'], ep.get('overview', ''))
                 )
             conn.commit()
         finally:
@@ -382,7 +389,7 @@ class Database:
         try:
             rows = conn.execute(
                 '''SELECT e.id, e.series_id, e.season_number, e.episode_number,
-                          e.name, e.air_date,
+                          e.name, e.air_date, e.overview,
                           s.name as series_name, s.poster_path
                    FROM episodes e
                    JOIN series s ON e.series_id = s.id
