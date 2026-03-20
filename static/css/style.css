@@ -386,7 +386,23 @@ a:hover { text-decoration: underline; }
     margin-bottom: .75rem;
     border-bottom: 2px solid var(--border);
     color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    user-select: none;
 }
+.series-group-title .chevron {
+    display: inline-block;
+    transition: transform .2s ease;
+    font-style: normal;
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: .85rem;
+}
+.series-group.collapsed .chevron { transform: rotate(-90deg); }
+.series-group-body { overflow: hidden; }
+.series-group.collapsed .series-group-body { display: none; }
 
 .series-card {
     display: flex;

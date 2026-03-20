@@ -119,7 +119,11 @@
     function buildGroup(title, items, isArchived) {
         const group = document.createElement('div');
         group.className = 'series-group';
-        group.innerHTML = `<div class="series-group-title">${title} (${items.length})</div>`;
+        group.innerHTML = `<div class="series-group-title">${title} (${items.length})<i class="chevron">&#9660;</i></div><div class="series-group-body"></div>`;
+        group.querySelector('.series-group-title').addEventListener('click', () => {
+            group.classList.toggle('collapsed');
+        });
+        const body = group.querySelector('.series-group-body');
 
         items.forEach(s => {
             const card = document.createElement('a');
@@ -142,7 +146,7 @@
                     }
                 </div>
             `;
-            group.appendChild(card);
+            body.appendChild(card);
         });
 
         // Event delegation for card action buttons
