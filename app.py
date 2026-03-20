@@ -257,6 +257,12 @@ def api_toggle_episode(episode_id):
 # API — Unwatched
 # ─────────────────────────────────────────────
 
+@app.route('/api/unwatched/count')
+def api_unwatched_count():
+    episodes = db.get_unwatched_episodes()
+    return jsonify({'count': len(episodes)})
+
+
 @app.route('/api/unwatched')
 def api_unwatched():
     episodes = db.get_unwatched_episodes()

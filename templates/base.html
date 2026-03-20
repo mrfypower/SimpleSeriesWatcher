@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <div class="page-wrapper">
     <nav class="navbar">
         <div class="nav-container">
             <a href="/" class="nav-brand">Simple Series Watcher</a>
@@ -14,7 +15,7 @@
             <div class="nav-links">
                 <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Calendar</a>
                 <a href="/series" class="nav-link {% if request.path.startswith('/series') %}active{% endif %}">My Series</a>
-                <a href="/unwatched" class="nav-link {% if request.path == '/unwatched' %}active{% endif %}">Unwatched</a>
+                <a href="/unwatched" class="nav-link {% if request.path == '/unwatched' %}active{% endif %}">Unwatched (<span id="unwatchedCount">…</span>)</a>
                 <div class="nav-dropdown">
                     <button class="nav-link nav-dropdown-btn" id="dataMenuBtn">Data</button>
                     <div class="nav-dropdown-content" id="dataMenu">
@@ -31,23 +32,39 @@
         <div class="nav-mobile" id="mobileMenu">
             <a href="/" class="nav-link">Calendar</a>
             <a href="/series" class="nav-link">My Series</a>
-            <a href="/unwatched" class="nav-link">Unwatched</a>
+            <a href="/unwatched" class="nav-link">Unwatched (<span id="unwatchedCountMobile">…</span>)</a>
             <a href="/api/export" class="nav-link">Export JSON</a>
             <a href="#" class="nav-link" id="importBtnMobile">Import JSON</a>
             <a href="#" class="nav-link" id="importCsvBtnMobile">Import CSV (EpisodeCalendar)</a>
         </div>
     </nav>
 
+    <div class="page-content">
     <input type="file" id="importFileInput" accept=".json" style="display:none">
     <input type="file" id="importCsvFileInput" accept=".csv" style="display:none">
 
     <main class="container">
         {% block content %}{% endblock %}
     </main>
+    </div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 
     <script>
+        // Unwatched episode count
+        (async () => {
+            try {
+                const resp = await fetch('/api/unwatched/count');
+                const data = await resp.json();
+                const count = data.count ?? '?';
+                const el = document.getElementById('unwatchedCount');
+                const elM = document.getElementById('unwatchedCountMobile');
+                if (el) el.textContent = count;
+                if (elM) elM.textContent = count;
+            } catch (_) {}
+        })();
+
         // Navbar mobile toggle
         document.getElementById('hamburgerBtn').addEventListener('click', () => {
             document.getElementById('mobileMenu').classList.toggle('open');
