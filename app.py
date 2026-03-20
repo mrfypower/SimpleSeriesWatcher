@@ -40,6 +40,11 @@ def series_detail_page(series_id):
     return render_template('series_detail.html', series=s)
 
 
+@app.route('/unwatched')
+def unwatched_page():
+    return render_template('unwatched.html')
+
+
 # ─────────────────────────────────────────────
 # API — Health check
 # ─────────────────────────────────────────────
@@ -235,6 +240,38 @@ def api_toggle_episode(episode_id):
     if new_val is None:
         return jsonify({'error': 'Not found'}), 404
     return jsonify({'watched': bool(new_val)})
+
+
+# ─────────────────────────────────────────────
+# API — Unwatched
+# ─────────────────────────────────────────────
+
+@app.route('/api/unwatched')
+def api_unwatched():
+    episodes = db.get_unwatched_episodes()
+
+    series_map = {}
+    series_order = []
+    for ep in episodes:
+        sid = ep['series_id']
+        if sid not in series_map:
+            series_map[sid] = {
+                'id': sid,
+                'name': ep['series_name'],
+                'poster_url': tmdb.poster_url(ep.get('poster_path'), 'w185'),
+                'seasons': {},
+            }
+            series_order.append(sid)
+        sn = str(ep['season_number'])
+        series_map[sid]['seasons'].setdefault(sn, []).append({
+            'id': ep['id'],
+            'season_number': ep['season_number'],
+            'episode_number': ep['episode_number'],
+            'name': ep['name'],
+            'air_date': ep['air_date'],
+        })
+
+    return jsonify([series_map[sid] for sid in series_order])
 
 
 @app.route('/api/series/<int:series_id>/seasons/<int:season_number>/toggle',

@@ -14,6 +14,7 @@
             <div class="nav-links">
                 <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Calendar</a>
                 <a href="/series" class="nav-link {% if request.path.startswith('/series') %}active{% endif %}">My Series</a>
+                <a href="/unwatched" class="nav-link {% if request.path == '/unwatched' %}active{% endif %}">Unwatched</a>
                 <div class="nav-dropdown">
                     <button class="nav-link nav-dropdown-btn" id="dataMenuBtn">Data</button>
                     <div class="nav-dropdown-content" id="dataMenu">
@@ -30,6 +31,7 @@
         <div class="nav-mobile" id="mobileMenu">
             <a href="/" class="nav-link">Calendar</a>
             <a href="/series" class="nav-link">My Series</a>
+            <a href="/unwatched" class="nav-link">Unwatched</a>
             <a href="/api/export" class="nav-link">Export JSON</a>
             <a href="#" class="nav-link" id="importBtnMobile">Import JSON</a>
             <a href="#" class="nav-link" id="importCsvBtnMobile">Import CSV (EpisodeCalendar)</a>

@@ -364,3 +364,22 @@ class Database:
             conn.commit()
         finally:
             conn.close()
+
+    def get_unwatched_episodes(self):
+        """Return all unwatched episodes for 'watching' series, ordered by series name,
+        season, and episode number."""
+        conn = self.get_connection()
+        try:
+            rows = conn.execute(
+                '''SELECT e.id, e.series_id, e.season_number, e.episode_number,
+                          e.name, e.air_date,
+                          s.name as series_name, s.poster_path
+                   FROM episodes e
+                   JOIN series s ON e.series_id = s.id
+                   WHERE e.watched = 0
+                   AND s.status = 'watching'
+                   ORDER BY s.name, e.season_number, e.episode_number'''
+            ).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()

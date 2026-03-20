@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Unwatched — Simple Series Watcher{% endblock %}
+
+{% block content %}
+<div id="unwatchedPage">
+    <div class="loader" id="unwatchedLoader">Loading…</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/unwatched.js') }}"></script>
+{% endblock %}
