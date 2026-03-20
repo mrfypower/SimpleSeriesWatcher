@@ -72,12 +72,32 @@
         container.appendChild(markAllBar);
         document.getElementById('markSeriesWatchedBtn').addEventListener('click', markSeriesWatched);
 
-        // ── Seasons ──
+        // ── Season Tabs ──
         const seasonNums = Object.keys(s.seasons).map(Number).sort((a, b) => a - b);
-        seasonNums.forEach(sn => {
+
+        const tabsWrapper = document.createElement('div');
+        tabsWrapper.className = 'season-tabs-wrapper';
+
+        const tabBar = document.createElement('div');
+        tabBar.className = 'season-tab-bar';
+
+        const tabPanels = document.createElement('div');
+        tabPanels.className = 'season-tab-panels';
+
+        seasonNums.forEach((sn, idx) => {
             const seasonData = s.seasons[String(sn)];
-            const block = document.createElement('div');
-            block.className = 'season-block';
+
+            // Tab button
+            const tab = document.createElement('button');
+            tab.className = 'season-tab-btn' + (idx === 0 ? ' active' : '');
+            tab.textContent = String(sn);
+            tab.dataset.season = sn;
+            tabBar.appendChild(tab);
+
+            // Tab panel
+            const panel = document.createElement('div');
+            panel.className = 'season-tab-panel' + (idx === 0 ? ' active' : '');
+            panel.dataset.season = sn;
 
             const headerEl = document.createElement('div');
             headerEl.className = 'season-header';
@@ -87,7 +107,7 @@
                     ${seasonData.fully_watched ? 'Unmark All' : 'Mark All Watched'}
                 </button>
             `;
-            block.appendChild(headerEl);
+            panel.appendChild(headerEl);
 
             const epList = document.createElement('div');
             epList.className = 'season-episodes';
@@ -97,7 +117,6 @@
                 let rowCls = 'episode-row ' + ep.type;
                 if (ep.watched) rowCls += ' watched-row';
                 row.className = rowCls;
-
                 row.innerHTML = `
                     <input type="checkbox" class="ep-check" data-id="${ep.id}" ${ep.watched ? 'checked' : ''}>
                     <span class="ep-number">S${pad(ep.season_number)}E${pad(ep.episode_number)}</span>
@@ -107,8 +126,8 @@
                 epList.appendChild(row);
             });
 
-            block.appendChild(epList);
-            container.appendChild(block);
+            panel.appendChild(epList);
+            tabPanels.appendChild(panel);
 
             // Toggle single episode
             epList.addEventListener('change', async (e) => {
@@ -134,6 +153,20 @@
                 }
             });
         });
+
+        // Tab switching
+        tabBar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.season-tab-btn');
+            if (!btn) return;
+            tabBar.querySelectorAll('.season-tab-btn').forEach(b => b.classList.remove('active'));
+            tabPanels.querySelectorAll('.season-tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            tabPanels.querySelector(`.season-tab-panel[data-season="${btn.dataset.season}"]`).classList.add('active');
+        });
+
+        tabsWrapper.appendChild(tabBar);
+        tabsWrapper.appendChild(tabPanels);
+        container.appendChild(tabsWrapper);
     }
 
     async function markSeriesWatched() {
