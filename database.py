@@ -289,9 +289,9 @@ class Database:
                         'Ended', 'Canceled'
                     )
                     if is_last_season and series_ended:
-                        ep_type = 'series_finale'
+                        ep_type = 'series-finale'
                     else:
-                        ep_type = 'season_finale'
+                        ep_type = 'season-finale'
                 d['type'] = ep_type
                 result.append(d)
 
