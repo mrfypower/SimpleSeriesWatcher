@@ -8,19 +8,24 @@
 
     loadDetail();
 
-    async function loadDetail() {
+    function activeSeasonNum() {
+        const btn = container.querySelector('.season-tab-btn.active');
+        return btn ? btn.dataset.season : null;
+    }
+
+    async function loadDetail(keepSeason) {
         container.innerHTML = '<div class="loader">Loading…</div>';
         try {
             const resp = await fetch(`/api/series/${seriesId}`);
             if (!resp.ok) { container.innerHTML = '<div class="loader">Series not found</div>'; return; }
             const data = await resp.json();
-            renderDetail(data);
+            renderDetail(data, keepSeason);
         } catch (err) {
             container.innerHTML = '<div class="loader">Failed to load series</div>';
         }
     }
 
-    function renderDetail(s) {
+    function renderDetail(s, keepSeason) {
         container.innerHTML = '';
 
         // ── Header ──
@@ -84,19 +89,22 @@
         const tabPanels = document.createElement('div');
         tabPanels.className = 'season-tab-panels';
 
+        const activeSeason = keepSeason != null ? String(keepSeason) : String(seasonNums[0]);
+
         seasonNums.forEach((sn, idx) => {
             const seasonData = s.seasons[String(sn)];
+            const isActive = String(sn) === activeSeason;
 
             // Tab button
             const tab = document.createElement('button');
-            tab.className = 'season-tab-btn' + (idx === 0 ? ' active' : '');
+            tab.className = 'season-tab-btn' + (isActive ? ' active' : '');
             tab.textContent = String(sn);
             tab.dataset.season = sn;
             tabBar.appendChild(tab);
 
             // Tab panel
             const panel = document.createElement('div');
-            panel.className = 'season-tab-panel' + (idx === 0 ? ' active' : '');
+            panel.className = 'season-tab-panel' + (isActive ? ' active' : '');
             panel.dataset.season = sn;
 
             const headerEl = document.createElement('div');
@@ -135,7 +143,7 @@
                     const epId = e.target.dataset.id;
                     try {
                         await fetch(`/api/episodes/${epId}/toggle`, {method: 'PUT'});
-                        loadDetail();
+                        loadDetail(activeSeasonNum());
                     } catch (err) {
                         showToast('Failed to toggle', 'error');
                     }
@@ -147,7 +155,7 @@
                 e.stopPropagation();
                 try {
                     await fetch(`/api/series/${seriesId}/seasons/${sn}/toggle`, {method: 'PUT'});
-                    loadDetail();
+                    loadDetail(activeSeasonNum());
                 } catch (err) {
                     showToast('Failed to toggle season', 'error');
                 }
